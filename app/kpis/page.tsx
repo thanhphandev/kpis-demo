@@ -29,6 +29,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { KPICard } from '@/components/kpi/kpi-card';
 import { KPIForm } from '@/components/kpi/kpi-form';
 import { useToast } from '@/hooks/use-toast';
+import { PermissionGuard } from '@/components/rbac/permission-guard';
 
 export default function KPIsPage() {
   const { user } = useAuthStore();
@@ -179,12 +180,12 @@ export default function KPIsPage() {
                   <Download className="mr-2 h-4 w-4" />
                   Export
                 </Button>
-                {['Admin', 'Manager'].includes(user?.role || '') && (
+                <PermissionGuard permission="kpi:create">
                   <Button onClick={() => setShowKPIForm(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Create KPI
                   </Button>
-                )}
+                </PermissionGuard>
               </div>
             </div>
           </CardHeader>
@@ -281,12 +282,12 @@ export default function KPIsPage() {
                     : 'No KPIs found'
                   }
                 </p>
-                {['Admin', 'Manager'].includes(user?.role || '') && (
+                <PermissionGuard permission="kpi:create">
                   <Button onClick={() => setShowKPIForm(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Create Your First KPI
                   </Button>
-                )}
+                </PermissionGuard>
               </div>
             )}
           </CardContent>

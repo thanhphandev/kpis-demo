@@ -27,15 +27,35 @@ import {
 import { useAuthStore } from '@/lib/store/auth';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useToast } from '@/hooks/use-toast';
+import { ReportGenerator } from '@/components/reports/report-generator';
+import { PermissionGuard } from '@/components/rbac/permission-guard';
 import { format } from 'date-fns';
 
 export default function ReportsPage() {
   const { user } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [showReportGenerator, setShowReportGenerator] = useState(false);
+  const [scheduledReports, setScheduledReports] = useState([]);
   const [reportType, setReportType] = useState('');
   const [timeRange, setTimeRange] = useState('30d');
   const [departmentFilter, setDepartmentFilter] = useState('');
   const { toast } = useToast();
+
+  useEffect(() => {
+    loadScheduledReports();
+  }, []);
+
+  const loadScheduledReports = async () => {
+    try {
+      const response = await fetch('/api/reports/schedule');
+      if (response.ok) {
+        const data = await response.json();
+        setScheduledReports(data.reports || []);
+      }
+    } catch (error) {
+      console.error('Failed to load scheduled reports:', error);
+    }
+  };
 
   const reportTemplates = [
     {
@@ -193,6 +213,20 @@ export default function ReportsPage() {
                   </SelectContent>
                 </Select>
               </div>
+              
+              <PermissionGuard permission="report:create">
+                <Button onClick={() => setShowReportGenerator(true)}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Generate Report
+                </Button>
+              </PermissionGuard>
+              
+              <PermissionGuard permission="report:export">
+                <Button variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                Export Report
+                </Button>
+              </PermissionGuard>
             </div>
           </CardContent>
         </Card>
@@ -314,7 +348,65 @@ export default function ReportsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Scheduled Reports */}
+        <PermissionGuard permission="report:schedule">
+          <Card>
+            <CardHeader>
+              <CardTitle>Scheduled Reports</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {scheduledReports.length > 0 ? (
+                <div className="space-y-4">
+                  {scheduledReports.map((report: any) => (
+                    <div key={report.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-4">
+                        <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                          <Calendar className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-gray-900">{report.reportType}</h4>
+                          <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                            <span>{report.frequency}</span>
+                            <span>•</span>
+                            <span>{report.format.toUpperCase()}</span>
+                            <span>•</span>
+                            <span>Next: {format(new Date(report.nextRun), 'MMM dd, yyyy')}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Badge variant={report.isActive ? 'default' : 'secondary'}>
+                          {report.isActive ? 'Active' : 'Inactive'}
+                        </Badge>
+                        <Button variant="outline" size="sm">
+                          Edit
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500 mb-4">No scheduled reports</p>
+                  <Button onClick={() => setShowReportGenerator(true)}>
+                    <Calendar className="mr-2 h-4 w-4" />
+                    Schedule Your First Report
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </PermissionGuard>
       </div>
+
+      <ReportGenerator
+        open={showReportGenerator}
+        onClose={() => setShowReportGenerator(false)}
+        onSuccess={loadScheduledReports}
+      />
     </DashboardLayout>
   );
 }

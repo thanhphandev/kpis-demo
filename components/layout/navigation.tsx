@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/lib/store/auth';
 import { cn } from '@/lib/utils';
+import { PermissionGuard } from '@/components/rbac/permission-guard';
 
 interface NavigationProps {
   className?: string;
@@ -29,61 +30,57 @@ export function Navigation({ className }: NavigationProps) {
   const pathname = usePathname();
   const { user } = useAuthStore();
 
-  const navigationItems = [
+  const allNavigationItems = [
     {
       name: 'Dashboard',
       href: '/dashboard',
       icon: Home,
-      roles: ['Admin', 'Manager', 'Staff'],
+      permission: 'kpi:read' as const,
     },
     {
       name: 'KPIs',
       href: '/kpis',
       icon: Target,
-      roles: ['Admin', 'Manager', 'Staff'],
+      permission: 'kpi:read' as const,
     },
     {
       name: 'Analytics',
       href: '/analytics',
       icon: BarChart3,
-      roles: ['Admin', 'Manager'],
+      permission: 'analytics:view' as const,
     },
     {
       name: 'Users',
       href: '/users',
       icon: Users,
-      roles: ['Admin', 'Manager'],
+      permission: 'user:read' as const,
     },
     {
       name: 'Departments',
       href: '/departments',
       icon: Building2,
-      roles: ['Admin'],
+      permission: 'department:read' as const,
     },
     {
       name: 'Reports',
       href: '/reports',
       icon: FileText,
-      roles: ['Admin', 'Manager'],
+      permission: 'report:read' as const,
     },
     {
       name: 'Notifications',
       href: '/notifications',
       icon: Bell,
-      roles: ['Admin', 'Manager', 'Staff'],
+      permission: 'kpi:read' as const,
       badge: 3, // Mock notification count
     },
     {
       name: 'Settings',
       href: '/settings',
       icon: Settings,
-      roles: ['Admin', 'Manager', 'Staff'],
+      permission: 'kpi:read' as const,
     },
   ];
-
-  const filteredItems = navigationItems.filter(item => 
-    user && item.roles.includes(user.role)
-  );
 
   return (
     <>
@@ -125,30 +122,34 @@ export function Navigation({ className }: NavigationProps) {
           {/* Navigation items */}
           <div className="flex-1 overflow-y-auto py-6">
             <div className="space-y-1 px-3">
-              {filteredItems.map((item) => {
+              {allNavigationItems.map((item) => {
                 const isActive = pathname === item.href;
                 const Icon = item.icon;
 
                 return (
-                  <Link
+                  <PermissionGuard
                     key={item.name}
-                    href={item.href}
-                    onClick={() => setIsOpen(false)}
-                    className={cn(
-                      'flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200',
-                      isActive
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                    )}
+                    permission={item.permission}
                   >
-                    <Icon className="h-4 w-4 mr-3" />
-                    <span className="flex-1">{item.name}</span>
-                    {item.badge && (
-                      <Badge variant="secondary" className="ml-2 px-1.5 py-0.5 text-xs">
-                        {item.badge}
-                      </Badge>
-                    )}
-                  </Link>
+                    <Link
+                      href={item.href}
+                      onClick={() => setIsOpen(false)}
+                      className={cn(
+                        'flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200',
+                        isActive
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      )}
+                    >
+                      <Icon className="h-4 w-4 mr-3" />
+                      <span className="flex-1">{item.name}</span>
+                      {item.badge && (
+                        <Badge variant="secondary" className="ml-2 px-1.5 py-0.5 text-xs">
+                          {item.badge}
+                        </Badge>
+                      )}
+                    </Link>
+                  </PermissionGuard>
                 );
               })}
             </div>
