@@ -29,6 +29,7 @@ import { apiClient } from '@/lib/api';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { DepartmentForm } from '@/components/departments/department-form';
 import { useToast } from '@/hooks/use-toast';
+import { PermissionGuard } from '@/components/rbac/permission-guard';
 
 export default function DepartmentsPage() {
   const { user } = useAuthStore();
@@ -101,12 +102,12 @@ export default function DepartmentsPage() {
           <CardHeader>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <CardTitle>Department Management</CardTitle>
-              {user?.role === 'Admin' && (
+              <PermissionGuard permission="department:create">
                 <Button onClick={() => setShowDepartmentForm(true)}>
                   <Plus className="mr-2 h-4 w-4" />
                   Add Department
                 </Button>
-              )}
+              </PermissionGuard>
             </div>
           </CardHeader>
           <CardContent>
@@ -152,7 +153,7 @@ export default function DepartmentsPage() {
                           </div>
                         </div>
                         
-                        {user?.role === 'Admin' && (
+                        <PermissionGuard permission="department:update">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -173,7 +174,7 @@ export default function DepartmentsPage() {
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
-                        )}
+                        </PermissionGuard>
                       </div>
                     </CardHeader>
 
@@ -234,12 +235,14 @@ export default function DepartmentsPage() {
                 <p className="text-gray-500 mb-4">
                   {searchTerm ? 'No departments match your search' : 'No departments found'}
                 </p>
-                {user?.role === 'Admin' && !searchTerm && (
+                <PermissionGuard permission="department:create">
+                  {!searchTerm && (
                   <Button onClick={() => setShowDepartmentForm(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Create First Department
                   </Button>
-                )}
+                  )}
+                </PermissionGuard>
               </div>
             )}
           </CardContent>

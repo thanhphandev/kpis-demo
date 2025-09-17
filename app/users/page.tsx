@@ -38,6 +38,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { UserForm } from '@/components/users/user-form';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { PermissionGuard } from '@/components/rbac/permission-guard';
 
 export default function UsersPage() {
   const { user } = useAuthStore();
@@ -125,12 +126,12 @@ export default function UsersPage() {
                   <Mail className="mr-2 h-4 w-4" />
                   Invite Users
                 </Button>
-                {user?.role === 'Admin' && (
+                <PermissionGuard permission="user:create">
                   <Button onClick={() => setShowUserForm(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add User
                   </Button>
-                )}
+                </PermissionGuard>
               </div>
             </div>
           </CardHeader>
@@ -218,7 +219,8 @@ export default function UsersPage() {
                                   <Mail className="mr-2 h-4 w-4" />
                                   Send Email
                                 </DropdownMenuItem>
-                                {user?.role === 'Admin' && u._id !== user.id && (
+                                <PermissionGuard permission="user:delete">
+                                  {u._id !== user.id && (
                                   <DropdownMenuItem 
                                     onClick={() => handleDeleteUser(u._id)}
                                     className="text-red-600 hover:text-red-700"
@@ -226,7 +228,8 @@ export default function UsersPage() {
                                     <Trash2 className="mr-2 h-4 w-4" />
                                     Deactivate
                                   </DropdownMenuItem>
-                                )}
+                                  )}
+                                </PermissionGuard>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>
@@ -239,12 +242,14 @@ export default function UsersPage() {
                           <p className="text-gray-500 mb-4">
                             {searchTerm ? 'No users match your search' : 'No users found'}
                           </p>
-                          {user?.role === 'Admin' && !searchTerm && (
+                          <PermissionGuard permission="user:create">
+                            {!searchTerm && (
                             <Button onClick={() => setShowUserForm(true)}>
                               <Plus className="mr-2 h-4 w-4" />
                               Add First User
                             </Button>
-                          )}
+                            )}
+                          </PermissionGuard>
                         </TableCell>
                       </TableRow>
                     )}
